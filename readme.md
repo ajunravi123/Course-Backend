@@ -63,9 +63,11 @@ http://localhost:8000/docs
 ```
 
 Usage
-Modify the routes/route.py file to define your API endpoints and logic.
-Define Pydantic models in separate files or inline to validate request/response data.
-Update the requirements.txt file if you add or remove dependencies.
-Use pytest to validate the test cases. Which is in test_main.py file
+- Modify the routes/route.py file to define your API endpoints and logic.
+- Define Pydantic models in separate files or inline to validate request/response data.
+- Update the requirements.txt file if you add or remove dependencies.
+- Use pytest to validate the test cases. Which is in test_main.py file.
+
+
 
 
