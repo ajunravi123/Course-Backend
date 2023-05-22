@@ -53,7 +53,13 @@ Open your web browser and navigate to http://localhost:8000/docs to view the Swa
 
 
 ```sh
-127.0.0.1:8000
+127.0.0.1:8000/docs
+```
+
+OR
+
+```sh
+http://localhost:8000/docs
 ```
 
 Usage
