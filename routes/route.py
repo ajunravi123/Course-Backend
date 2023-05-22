@@ -198,7 +198,7 @@ async def create_course(rating: Rating, chapter_id: str = Path(..., description=
                 }
                 conn.kimo.rating.insert_one(rating_data)
                 update_overall_rating(chapter["course_id"])
-                return JSONResponse(content={"success" : "Rating details inserted into the system"}, status_code=200)
+                return JSONResponse(content={"success" : "Rating details updated into the system"}, status_code=200)
             else:
                 error_message = {"error": "Chapter not found"}
                 return JSONResponse(content=error_message, status_code=404)
@@ -207,7 +207,7 @@ async def create_course(rating: Rating, chapter_id: str = Path(..., description=
             update = {'$set': {'point': int(rating.point)}}
             conn.kimo.rating.update_one(filter, update)
             update_overall_rating(chapter_info["course_id"])
-            return JSONResponse(content={"success" : "Rating details updated into the system" }, status_code=200)
+            return JSONResponse(content={"success" : "Rating details updated into the system"}, status_code=200)
 
     except Exception as e:
         error_message = {"error": str(e)}

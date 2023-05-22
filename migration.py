@@ -4,7 +4,7 @@ from models.course import Course
 from models.chapter import Chapter
 from config.db import conn 
 
-FILE_PATH = "Requirement/courses.json"
+FILE_PATH = "data/courses.json"
 
 # Loading the course information
 with open(FILE_PATH, 'r') as file:
