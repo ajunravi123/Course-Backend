@@ -1,7 +1,7 @@
 
-# FastAPI Project - Kimi.AI
+# FastAPI Project - Kimo.AI
 
-Backend Server For Serving Course Informations
+Backend Server For Accessing Course Informations
 
 # Author:
 

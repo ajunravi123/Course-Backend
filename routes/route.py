@@ -15,6 +15,7 @@ class SortByOptions(str, Enum):
     date = "date"
     rating = "rating"
 
+"""API to return Course Information"""
 @course.get('/course')
 async def list_courses(
     sort_by: SortByOptions = Query("name", description="Sort courses by name, date or rating. Default is by name."),
@@ -62,6 +63,7 @@ async def list_courses(
     return resp
 
 
+"""Path API to return a specific Course's Information"""
 @course.get('/course/{course_id}')
 async def list_course(
     course_id : str = Path(..., description="ObjectID of the course")
@@ -79,7 +81,8 @@ async def list_course(
         error_message = {"error": str(e)}
         return JSONResponse(content=error_message, status_code=400)
 
-    
+
+"""Query API to fetch chapter Informations"""
 @course.get('/chapter')
 async def get_chapter(
     name: str = Query("", description="Search chapters by chapter name"),
@@ -129,6 +132,7 @@ async def get_chapter(
         return JSONResponse(content=error_message, status_code=400)
     
 
+"""Path API to fetch a specific chapter Information"""
 @course.get('/chapter/{chapter_id}')
 async def get_chapter(
     chapter_id: str = Path(..., description="Search chapters by chapterID"),
@@ -161,7 +165,7 @@ async def get_chapter(
         return JSONResponse(content=error_message, status_code=400)
     
 
-
+"""API to rate a specific chapter by chapter ID """
 @course.post('/rating/chapter/{chapter_id}')
 async def create_course(rating: Rating, chapter_id: str = Path(..., description="ChapterID of a specific chapter")):
     try:
@@ -212,7 +216,6 @@ async def create_course(rating: Rating, chapter_id: str = Path(..., description=
     except Exception as e:
         error_message = {"error": str(e)}
         return JSONResponse(content=error_message, status_code=400)
-
 
 
 def update_overall_rating(course_id : ObjectId):
