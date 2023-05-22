@@ -3,7 +3,7 @@
 
 Backend Server For Accessing Course Informations
 
-# Author:
+## Author
 
 Ajun Ravi
 
@@ -13,7 +13,7 @@ This is a basic FastAPI project for managing the course related informations.
 
 ## Features
 
-- RESTful API endpoints
+- RESTful API endpoints to access courses and chapters information. Also a Post API to add user ratings against a chapter.
 - Request validation using Pydantic models
 - Automatic API documentation with Swagger UI
 
