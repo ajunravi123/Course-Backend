@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Path
 from models.course import CourseResponseSchema
 from models.chapter import ChapterResponseSchema
+from models.rating import Rating
 from config.db import conn 
 from schemas.course import serializeDict, serializeList
 from bson import ObjectId
@@ -73,7 +74,7 @@ async def list_course(
             return serializeDict(course)
         else:
             error_message = {"error": "Course not found"}
-            return JSONResponse(content=error_message, status_code=200)
+            return JSONResponse(content=error_message, status_code=404)
     except Exception as e:
         error_message = {"error": str(e)}
         return JSONResponse(content=error_message, status_code=400)
@@ -85,63 +86,149 @@ async def get_chapter(
     course_id: str = Query("", description="Search chapters by courseID"),
     id: str = Query("", description="Search chapters by chapterID"),
 ):
-    pipeline = [
-        {
-            "$lookup": {
-                "from": "course",
-                "localField": "course_id",
-                "foreignField": "_id",
-                "as": "course_info",
+    try:
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "course",
+                    "localField": "course_id",
+                    "foreignField": "_id",
+                    "as": "course_info",
+                }
             }
-        }
-    ]
+        ]
 
-    filters = {}
-    if name != "":
-        filters["name"] = name
-    
-    if course_id != "":
-        filters["course_id"] = ObjectId(course_id)
-
-    if id != "":
-        filters["_id"] = ObjectId(id)
+        filters = {}
+        if name != "":
+            filters["name"] = name
         
-    if filters is not None:
-        pipeline.append({
-            "$match": filters
-        })
+        if course_id != "":
+            filters["course_id"] = ObjectId(course_id)
 
-    # Find query with join
-    sorted_documents = conn.kimo.chapter.aggregate(pipeline)
+        if id != "":
+            filters["_id"] = ObjectId(id)
+            
+        if filters is not None:
+            pipeline.append({
+                "$match": filters
+            })
 
-    resp = []
-    for item in sorted_documents:
-        item = serializeDict(item)
-        item["course_info"] = serializeDict(item["course_info"][0])
-        new_data = dict(ChapterResponseSchema.parse_obj(item))
-        resp.append(new_data)
+        # Find query with join
+        result = conn.kimo.chapter.aggregate(pipeline)
 
-    return resp
+        resp = []
+        for item in result:
+            item = serializeDict(item)
+            item["course_info"] = serializeDict(item["course_info"][0])
+            new_data = dict(ChapterResponseSchema.parse_obj(item))
+            resp.append(new_data)
+
+        return resp
+    except Exception as e:
+        error_message = {"error": str(e)}
+        return JSONResponse(content=error_message, status_code=400)
+    
+
+@course.get('/chapter/{chapter_id}')
+async def get_chapter(
+    chapter_id: str = Path(..., description="Search chapters by chapterID"),
+):
+    try:
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "course",
+                    "localField": "course_id",
+                    "foreignField": "_id",
+                    "as": "course_info",
+                }
+            },
+            {
+                "$match": {
+                    "_id" : ObjectId(chapter_id)
+                }
+            }
+        ]
+
+        result = conn.kimo.chapter.aggregate(pipeline)
+        chapter_info = next(result, None)
+        chapter_info = serializeDict(chapter_info)
+        chapter_info["course_info"] = serializeDict(chapter_info["course_info"][0])
+        new_data = dict(ChapterResponseSchema.parse_obj(chapter_info))
+        return new_data
+    except Exception as e:
+        error_message = {"error": str(e)}
+        return JSONResponse(content=error_message, status_code=400)
     
 
 
+@course.post('/rating/chapter/{chapter_id}')
+async def create_course(rating: Rating, chapter_id: str = Path(..., description="ChapterID of a specific chapter")):
+    try:
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "rating",
+                    "localField": "_id",
+                    "foreignField": "chapter_id",
+                    "as": "rating_info",
+                }
+            },
+            {
+                '$unwind': '$rating_info'
+            },
+            {
+                "$match": {
+                    "_id" : ObjectId(chapter_id),
+                    'rating_info.user': rating.user
+                }
+            }
+        ]
 
-# @course.get('/{id}')
-# async def find_one_course(id):
-#     return serializeDict(conn.kimo.course.find_one({"_id":ObjectId(id)}))
+        result = conn.kimo.chapter.aggregate(pipeline)
+        chapter_info = next(result, None)
+        if chapter_info is None:
+            chapter = conn.kimo.chapter.find_one({"_id": ObjectId(chapter_id)})
+            if chapter is not None:
+                rating_data = {
+                    "course_id" : chapter["course_id"],
+                    "chapter_id" : chapter["_id"],
+                    "user" : rating.user,
+                    "point" : rating.point
+                }
+                conn.kimo.rating.insert_one(rating_data)
+                update_overall_rating(chapter["course_id"])
+                return JSONResponse(content={"success" : "Rating details inserted into the system"}, status_code=200)
+            else:
+                error_message = {"error": "Chapter not found"}
+                return JSONResponse(content=error_message, status_code=404)
+        else:
+            filter = {'_id': chapter_info["rating_info"]["_id"]}
+            update = {'$set': {'point': int(rating.point)}}
+            conn.kimo.rating.update_one(filter, update)
+            update_overall_rating(chapter_info["course_id"])
+            return JSONResponse(content={"success" : "Rating details updated into the system" }, status_code=200)
 
-# @course.post('/')
-# async def create_course(course: Course):
-#     conn.kimo.course.insert_one(dict(course))
-#     return serializeList(conn.kimo.course.find())
+    except Exception as e:
+        error_message = {"error": str(e)}
+        return JSONResponse(content=error_message, status_code=400)
 
-# @course.put('/{id}')
-# async def update_course(id,course: Course):
-#     conn.kimo.course.find_one_and_update({"_id":ObjectId(id)},{
-#         "$set":dict(course)
-#     })
-#     return serializeDict(conn.kimo.course.find_one({"_id":ObjectId(id)}))
 
-# @course.delete('/{id}')
-# async def delete_course(id,course: Course):
-#     return serializeDict(conn.kimo.course.find_one_and_delete({"_id":ObjectId(id)}))
+
+def update_overall_rating(course_id : ObjectId):
+    try:
+        ratings = conn.kimo.rating.find({"course_id": course_id})
+        total_rating = 0
+        cnt = 0
+        for rating in ratings:
+            total_rating += int(rating["point"])
+            cnt += 1
+
+        overall_rating =  (total_rating // cnt) if cnt > 0 else 0
+        filter = {'_id': course_id}
+        update = {'$set': {'overall_rating': int(overall_rating)}}
+        conn.kimo.course.update_one(filter, update)
+        return True
+    except Exception as e:
+        print(e)
+        return False

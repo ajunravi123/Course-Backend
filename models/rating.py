@@ -1,5 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Rating(BaseModel):
     user: str
-    point: int
+    point: int = Field(..., gt=-6, lt=6)

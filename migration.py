@@ -21,7 +21,7 @@ with open(FILE_PATH, 'r') as file:
             chapters = item["chapters"]
 
             #Chapters insertion
-            new_chapter_info = [dict(Chapter.parse_obj({**item, "course_id": str(course_id), "rating" : []})) for item in chapters]
+            new_chapter_info = [dict(Chapter.parse_obj({**item, "course_id": str(course_id)})) for item in chapters]
             result = conn.kimo.chapter.insert_many(new_chapter_info)
             print(f"Course '{course_instance.name}' is inserted into the system")
         except PyMongoError as e:
