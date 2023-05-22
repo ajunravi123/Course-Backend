@@ -40,7 +40,13 @@ Run the application:
 
 shell
 Copy code
-uvicorn main:app --reload
+
+Run "python migration.py" command to migrate the data from course.json to Local MongoDB. The script will take care of Database creation, making collections, adding indexes and migration processes.
+
+To Run the App, execute the following command
+uvicorn index:app --reload
+
+
 Access the API documentation:
 
 Open your web browser and navigate to http://localhost:8000/docs to view the Swagger UI documentation.
@@ -54,5 +60,6 @@ Usage
 Modify the routes/route.py file to define your API endpoints and logic.
 Define Pydantic models in separate files or inline to validate request/response data.
 Update the requirements.txt file if you add or remove dependencies.
+Use pytest to validate the test cases. Which is in test_main.py file
 
 

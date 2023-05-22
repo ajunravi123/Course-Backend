@@ -12,7 +12,7 @@ class Course(BaseModel):
     overall_rating: int
 
 class CourseResponseSchema(BaseModel):
-    id: str = Field(default_factory=str, alias="_id") # PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    id: str = Field(default_factory=str, alias="_id")
     name: str
     date: datetime
     description: str
